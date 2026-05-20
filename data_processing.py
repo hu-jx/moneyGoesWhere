@@ -7,19 +7,17 @@ def init_db():
     """
     Create a new database for expenses record of user
     """
-    conn = sqlite3.connect(db)
-    cursor = conn.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS expenses (
-                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   user_id INTEGER NOT NULL, 
-                   category TEXT, 
-                   cost DECIMAL,
-                   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                   )
-                   """)
-    conn.commit()
-    cursor.close()
-    conn.close()
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""CREATE TABLE IF NOT EXISTS expenses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL, 
+                    category TEXT, 
+                    cost DECIMAL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """)
+        conn.commit()
 
 
 def add_expense(user_id: int, timestamp: datetime, cat : str, cost: float) -> None:
@@ -51,10 +49,32 @@ def filter_monthly(user_id: int, date: datetime) -> float:
     """
     with sqlite3.connect(db) as conn:
         cursor = conn.cursor()
-        cursor.execute(f""" SELECT SUM(cost)
+        cursor.execute(""" SELECT SUM(cost)
                     FROM expenses
                     WHERE user_id = ? AND 
                             strftime('%Y-%m', timestamp) = strftime('%Y-%m', ?)""",
                     (user_id, date))
         total = cursor.fetchone()[0]
     return total or 0 
+
+def delete() -> None:
+    """
+    Clears the SQLite database to return an empty table of records
+    """
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM expenses")
+        conn.commit()
+
+def todays_records(user_id: int, date:datetime) -> list:
+    """
+    Returns all expenses records corresponding to today's date
+    """
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""SELECT * 
+                       FROM expenses 
+                       WHERE user_id = ? AND strftime('%Y-%m', timestamp) = strftime('%Y-%m', ?)
+                       """, (user_id, date))
+        table = cursor.fetchall()
+    return table
