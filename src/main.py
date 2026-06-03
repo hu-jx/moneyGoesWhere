@@ -1,6 +1,6 @@
 from telegram import Update
 from dotenv import load_dotenv
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, ApplicationHandlerStop, TypeHandler
 import os 
 import logging
 from zoneinfo import ZoneInfo
@@ -24,16 +24,15 @@ logger = logging.getLogger(__name__)
 
 MY_USER_ID = os.getenv("MY_USER_ID")
 
-async def start(update, context):
+async def block_unauthorized(update, context):
     user_id = update.effective_user.id
-    
+    if not user_id:
+        return
     # Check if the user is authorized
-    if user_id != MY_USER_ID:
+    if int(user_id) != int(MY_USER_ID):
         # Ignore or send an unauthorized message
         await update.message.reply_text("Unauthorized access. You are not allowed to use this bot.")
-        return
-
-    await update.message.reply_text("Welcome!")
+        raise ApplicationHandlerStop
 
 #Defining command handlers for expenses tracking 
 async def restart(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -222,6 +221,9 @@ def main() -> None:
     """Creates database if it does not exists already in local disk and start the bot"""
     data_processing.init_db()
     app = Application.builder().token(my_token).build()
+
+    #check authorization before running bot (for admin only currently)
+    app.add_handler(TypeHandler(Update, block_unauthorized), group=-1)
 
     #add command to the telegram bot
     app.add_handler(CommandHandler("add", add))
