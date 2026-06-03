@@ -1,0 +1,6 @@
+logging
+os
+telegram.ext
+dotenv 
+telegram
+python-telegram-bot
