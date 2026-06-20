@@ -13,7 +13,7 @@ Minimum required versions: Python 3.9
 1. Set up environment secrets as shown in the .env.example file.
 2. Install and set up dependencies required via running the following command in your local machine's terminal
 ```bash
-pip install-r requirements.txt
+pip install -r requirements.txt
 ```
 3. Run the main.py file via the following command in your local machine's terminal
 ```bash
